@@ -1,0 +1,28 @@
+
+// 256 color title screen background
+// hack by Leonarth, modified by stan
+
+#include "Extensions/Hack Installation.txt"
+
+ALIGN 4
+DrawTitleBackgroundHook:
+    #incbin "DrawTitleBackgroundHook.dmp"
+    POIN BaseTitleScreenBackgroundImg
+    POIN BaseTitleScreenBackgroundPal
+    POIN BaseTitleScreenBackgroundTm
+
+PUSH
+
+    // draw our thing instead of the regular background
+    ORG $0C5724
+        jumpToHack(DrawTitleBackgroundHook)
+
+    // skip a bunch of stuff
+    ORG $0C5738
+        SHORT $E030
+    ORG $0C57A8
+        SHORT $E048
+    ORG $0C579E
+        SHORT $46C0
+
+POP

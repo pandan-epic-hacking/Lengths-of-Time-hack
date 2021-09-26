@@ -1,0 +1,40 @@
+
+// FE5-style fatigue
+// hack by sme, modified by stan
+
+// Take the the cannot be deployed hack and make its conditions be if fatigue > max HP
+// Add S Drink, which removes all fatigue when used
+// At the end of the prep screen, set fatigue to 0 for everyone marked undeployed
+
+// Installation:
+// add IncreaseFatigueAfterAction to post action hook
+
+ALIGN 4
+FatigueExemptCharList:
+    BYTE Eirika
+    BYTE Ephraim
+    BYTE 0
+
+// stan notes:
+// unit byte that holds fatigue is +3B
+
+// fatigue core, holds basic fatigue accessors and core hooks
+#include "FatigueCore.lyn.event"
+
+// defining HookProtect(from, to) for debug builds
+// use at the end of a hook: from defines the start of the hook, to defines the end of the space allocated for the hook
+// this does two things: protects the hook from other hacks and ensures the hook doesn't overflow past its allocated area
+
+#ifndef HookProtectDefined
+  #define HookProtectDefined
+  #define HookProtect(a_from, a_to) "PROTECT (a_from) (a_to); ASSERT (a_to) - CURRENTOFFSET"
+#endif // HookProtectDefined
+
+PUSH
+
+    // in SortPlayerUnitsForPrepScreen
+    ORG $0957F8
+        WORD $47184B00; POIN FatiguePrepScreenHook
+        HookProtect($0957F8, $095800)
+
+POP

@@ -1,0 +1,16 @@
+
+// allows force-deployed units to be moved by the player during preparations
+// hack by AuraWolf, simplified by stan
+
+PUSH
+
+    ORG $033758
+        SHORT $46C0 // nop
+
+    // replace CountForceDeployedUnits
+    // TODO: is this a good idea? maybe edit the callers instead
+    ORG $09541C
+        SHORT $2000 // mov  r0, #0
+        SHORT $4770 // bx   lr
+
+POP

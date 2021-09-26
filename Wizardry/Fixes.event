@@ -1,0 +1,218 @@
+
+// essential fixes
+
+PUSH
+
+    // 12 tracks/16 sounds fix
+    // by Agro/Brendor
+
+    ORG $002900
+        SHORT $E00C
+    ORG $002924
+        SHORT $280C $D00E $200C
+    ORG $22440C
+        BYTE $10
+    ORG $224414
+        WORD $030067B0
+        BYTE $10
+
+    // cg fade glitch (allow cg fade with more than 6 palettes)
+    // by circleseverywhere (unsure)
+
+    ORG $00EBCA
+        BYTE 8
+    ORG $00EDE0
+        SHORT $1C0A // mov r2, r1
+
+    // fix enemy control glitch
+    // by Brendor, modified by stan
+
+    ORG $377A2
+        SHORT $46C0 $46C0
+
+    // fix proc names not being cleared 
+    // by stan
+
+    ORG $002C9E
+        SHORT $6129 $2026 $5429 $3002 $5429
+
+    // fix CAMERA_CENTERED going out of bounds
+    // by stan
+
+    ORG $015D52
+        BYTE 14
+    ORG $015D66
+        BYTE 9
+
+    // add null pointer check in Decompress
+    // by Tequila
+
+    ORG $012F52
+        SHORT $2800 $D014 $22FA $0612 $1852 $4B0A $2501 $429A $D800 $2500 $4A09 $7803 $24F0 $4023 $08DB $195B $009B $18D2 $6812 $46C0 $46C0
+
+    // allow wyvern knights to triangle attack
+    // by circleseverywhere
+
+    ORG $02B168
+        SHORT $46C0
+
+    // fix stone map animation bad decompression
+    // by Tequila (unsure)
+
+    ORG $07E2B4
+        BYTE 8
+
+    // hold A to speed up movement (ew)
+    // by Gryz
+
+    ORG $0794EE
+        SHORT $46C0
+
+    // add bound checking in the AddTrap function
+    // by Leonarth
+
+    ORG $02E2B8
+        SHORT $B470 $4C07 $4D07 $3408 $42AC $D806 $78A6 $2E00 $D1F9 $7020 $7061 $70A2 $70E3 $1C20 $BC70 $4770 $A60C $0203 $A814 $0203
+
+    // mode coefficient exp fix
+    // by Vennobennu
+
+    ORG $02C474
+        SHORT $46C0 $46C0
+
+    // fix pierce glitch
+    // by Brendor
+
+    ORG $02B290
+        BYTE $A0
+
+    // silence new game song
+    // by circleseverywhere (unsure)
+
+    ORG $0C4A0C
+        BYTE 0
+
+    // skip H&S screen
+    // by circleseverywhere (unsure)
+
+    ORG $0CC20C
+        SHORT $46C0
+
+    // skip class roll and intro rerun
+    // by circleseverywhere (unsure)
+
+    ORG $0C63AD
+        BYTE $E0
+
+    // skip intro cutscene
+    // by circleseverywhere
+
+    ORG $0C6714
+        SHORT $46C0
+
+    // skip new game text
+    // by circleseverywhere (unsure)
+
+    ORG $0C4928
+        SHORT $46C0
+
+    // fix autocursor
+    // by Vennobennu
+
+    ORG $03325A
+        SHORT $E021
+
+    // TODO: FixedAutolevel (conflict with MSS growth getters?)
+
+    // set default options
+
+    ORG $030DA6
+        SHORT $22C0 // fast game speed, text speed 2 (fast)
+
+    // remove world map
+    // by ?
+
+    ORG $0BD070
+        SHORT $E0B8
+    ORG $0897B2
+        SHORT $46C0 $46C0
+    ORG $0897C4
+        SHORT $200E $5620
+
+    // unlock all sound room songs
+    // by ?, modified by stan
+
+    ORG $0AEDE0
+        SHORT $46C0
+
+    // anti-huffman patch
+    // by Hextator and Nintenlord, modified by stan
+
+    {
+
+    // replace DecodeString wrapper
+    ORG $002BA4
+        // this function should only ever be called from GetMsgTo, so we don't need to worry about potential ARM callers
+        // this means that we can safely do pop {pc} for returns
+        SHORT $B500      // push  {lr}
+        SHORT $0FC2      // lsr   r2, r0, #31
+        SHORT $D002      // beq   decode_string
+        BL(CopyString)   // bl    CopyString
+        SHORT $BD00      // pop   {pc}
+        BL(DecodeString) // bl    DecodeString @ decode_string
+        SHORT $BD00      // pop   {pc}
+
+    // replace GetMsg
+    ORG $00A240
+        SHORT $4A04 // ldr   r2, =gCurrentMsgId
+        SHORT $6811 // ldr   r1, [r2]
+        SHORT $4288 // cmp   r0, r1
+        SHORT $D002 // beq   already_loaded
+        SHORT $4903 // ldr   r1, =gCurrentMsgStr
+        SHORT $6010 // str   r0, [r2]
+        SHORT $E018 // b     GetMsgTo
+        SHORT $4802 // ldr   r0, =gCurrentMsgStr @ already_loaded
+        SHORT $4770 // bx    lr
+        SHORT $46C0 // nop
+        WORD 0x0202B6AC 0x0202A6AC
+
+    CopyString:
+        SHORT $0102 // lsl   r2, r0, #4
+        SHORT $1C08 // mov   r0, r1
+        SHORT $0911 // lsr   r1, r2, #4
+        SHORT $4B01 // ldr   r3, =strcpy
+        SHORT $4718 // bx    r3
+        SHORT $46C0 // nop
+        WORD 0x80D1D3D
+
+    DecodeString:
+        SHORT $4B01 // ldr   r3, =DecodeStringFunc
+        SHORT $681B // ldr   r3, [r3]
+        SHORT $4718 // bx    r3
+        SHORT $46C0 // nop
+        WORD 0x03004150
+
+    }
+
+    // animation hacks
+    // by Hextator
+
+    {
+
+    // C01 hack
+    ORG $005138
+        WORD $47004800 $08464421
+    ORG $464420
+        WORD 0x401820FF 0xD00A2801 0xD8062818 0x6A10D103 0x62103804 0x4B0BE013 0x4B0B4718 0x041B4718 0x009B0E1B 0x3101A102 0x4908468E 0x46C04708 0xD1002801 0x33042300 0x1AC06A10 0x1C206210 0x46C0BD30 0x08005145 0x08005159 0x080522CD
+    ORG $46446C
+        WORD 0x80522cd
+
+    // C48 hack
+    ORG $058D64
+        WORD $08464400
+    ORG $464400
+        WORD 0x3D046A3D 0x022D682D 0xA5020C28 0x46AE3501 0x47284D01 0x47004801 0x08071991 0x080596CD
+
+    }
+
+POP

@@ -1,0 +1,21 @@
+
+#include "TableDefinitions.event"
+
+#include "ExternalTables.event"
+
+#include "CharactersClasses/ClassLevelCapTable.event"
+
+#include "ItemEffectRevamp/Effect_Anim_Association_Editor.event"
+#include "ItemEffectRevamp/IER_StatboosterText.event"
+#include "ItemEffectRevamp/Item_AI_Table.event"
+#include "ItemEffectRevamp/Item_Effect_Revamp.event"
+#include "ItemEffectRevamp/ItemBox_Effect.event"
+#include "ItemEffectRevamp/Promotion_Item_Table.event"
+#include "ItemEffectRevamp/Staff_AI_Table.event"
+
+#include "Misc/BiorhythmEditor.event"
+#include "Misc/EscapeQuoteEditor.event"
+#include "Misc/ModularEXPClassTable.event"
+#include "Misc/ModularPreBattleTable.event"
+#include "Misc/PersonalDataEditor.event"
+#include "Misc/PromotionLevelList.event"

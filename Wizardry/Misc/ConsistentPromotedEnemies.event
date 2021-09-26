@@ -1,0 +1,11 @@
+
+// make promoted enemies always have a fixed 19 bonus levels
+// hack by stan
+
+PUSH
+
+    ORG $037B44
+        SHORT $2013 // mov r0, #19
+        SHORT $4770 // bx lr
+
+POP

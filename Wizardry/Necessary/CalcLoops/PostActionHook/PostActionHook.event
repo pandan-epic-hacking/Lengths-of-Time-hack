@@ -1,0 +1,21 @@
+
+// post battle/action hook
+// hack by ?, rewritten by stan
+
+// TODO: move list to elseweyr
+ALIGN 4
+PostActionFuncList:
+    POIN IncreaseFatigueAfterAction
+    WORD 0 // end
+
+#include "src/PostActionHook.lyn.event"
+
+PUSH
+
+    ORG $59ABEC
+        POIN PostActionHook
+
+    ORG $5A8080
+        POIN PostActionHook
+
+POP

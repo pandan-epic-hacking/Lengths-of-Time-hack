@@ -1,0 +1,13 @@
+
+// do not display weapons on promotion
+// hack by Chap
+
+PUSH
+
+    ORG $02F6A0
+        SHORT $46C0 $2000
+
+    ORG $0CD0EC
+        SHORT $46C0 $2000
+
+POP

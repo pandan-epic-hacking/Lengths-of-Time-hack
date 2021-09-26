@@ -1,0 +1,34 @@
+
+// change hp cap for blue and non-blue units
+// hack by ? (7743?)
+
+#define HP_CAP_BLUE 80
+#define HP_CAP_NON_BLUE 99
+
+PUSH
+
+    // blue hp cap
+    ORG $0181E2
+        BYTE HP_CAP_BLUE
+    ORG $0181EE
+        BYTE HP_CAP_BLUE
+    ORG $02BF4C
+        BYTE HP_CAP_BLUE
+    ORG $02BF64
+        BYTE HP_CAP_BLUE
+    ORG $09C0E4
+        BYTE HP_CAP_BLUE
+    ORG $09C278
+        BYTE HP_CAP_BLUE
+
+    // non-blue hp cap
+    ORG $0181DC
+        BYTE HP_CAP_NON_BLUE
+    ORG $0181F4
+        BYTE HP_CAP_NON_BLUE
+    ORG $02BF46
+        BYTE HP_CAP_NON_BLUE
+    ORG $02BF60
+        BYTE HP_CAP_NON_BLUE
+
+POP

@@ -1,0 +1,11 @@
+
+// remove the 1-per-move trade limit
+// hack by aera
+
+PUSH
+
+    // do not check for the bit in the trade usability function
+    ORG $022F50
+        SHORT $46C0
+
+POP

@@ -1,0 +1,21 @@
+
+// Force boss animation to be displayed reguardless of setting (but only on enemy phase?)
+// hack by aera and 7743
+
+PUSH
+
+    ORG $057A7A
+        SHORT $2800 // cmp   r0, #0
+        SHORT $D01A // beq   057AB4
+        SHORT $2803 // cmp   r0, #3
+        SHORT $D018 // beq   057AB4
+        SHORT $2801 // cmp   r0, #1
+        SHORT $D116 // bne   057AB4
+        SHORT $464D // mov   r5, r9
+        SHORT $6828 // ldr   r0, [r5]
+        SHORT $8D00 // ldrh  r0, [r0, #0x28]
+        SHORT $0400 // lsl   r0, #16
+        SHORT $0FC0 // lsr   r0, #31
+        SHORT $D110 // bne   057AB4
+
+POP

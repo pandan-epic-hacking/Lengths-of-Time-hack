@@ -1,0 +1,11 @@
+
+// make prep screen store prices not raised by 50%
+// hack by aera
+
+PUSH
+
+    // change conditional jump to unconditional
+    ORG $0B5237
+        BYTE $E0
+
+POP

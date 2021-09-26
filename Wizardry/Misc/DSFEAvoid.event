@@ -1,0 +1,10 @@
+
+// make base battle avoid formula speed+luck
+// hack by GratedShtick, simplified by 7743 and stan
+
+PUSH
+
+    ORG $02ABEE
+        SHORT $46C0 // nop
+
+POP

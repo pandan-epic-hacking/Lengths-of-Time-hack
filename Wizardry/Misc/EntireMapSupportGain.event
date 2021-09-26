@@ -1,0 +1,11 @@
+
+// makes support gain "range" infinite
+// hack by Vennobennu
+
+PUSH
+
+    ORG $0284E4
+        SHORT $46C0 // nop
+        SHORT $E004 // b 0284F2
+
+POP

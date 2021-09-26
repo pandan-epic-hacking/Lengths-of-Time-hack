@@ -1,0 +1,12 @@
+
+// make the Canto ability behave like in "console" Fire Emblem games
+// where it applies even after a combat or staff action
+// hack by stan
+
+PUSH
+
+    // remove the check for attack/staff action in canto function
+    ORG $01D276
+        SHORT $46C0 // nop
+
+POP

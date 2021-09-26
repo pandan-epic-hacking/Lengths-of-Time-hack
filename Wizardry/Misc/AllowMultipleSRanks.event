@@ -1,0 +1,10 @@
+
+// allow units to have more than one S rank wexp
+// hack by Tequila
+
+PUSH
+
+    ORG $02C150
+        SHORT $E011 // b 02C176
+
+POP

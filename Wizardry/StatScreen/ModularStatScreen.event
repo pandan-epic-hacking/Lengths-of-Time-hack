@@ -1,0 +1,126 @@
+
+// Modular Stat Screen.
+// hack by circleseverywhere
+
+// Skill System Stat Screen by circleseverywhere with additions by Tequila, and probably more people too
+
+#define Skl_Arrow_X 0x78
+#define Skl_Arrow_Y 0x28
+#define Spd_Arrow_X 0x78
+#define Spd_Arrow_Y 0x38
+#define Trv_Icon_X 0xB8
+#define Trv_Icon_Y 0x2E
+
+#include "DisplayGrowthsOptions/DisplayGrowthsOptions.event"
+
+PUSH
+    ORG 0x205b24 //24 for stat screen
+        POIN MSS_page1 MSS_page2 MSS_page3 MSS_page1
+
+    // Make all the arrows line up with the stats and stuff
+
+    ORG $883C0
+        BYTE Skl_Arrow_X 0x20 Skl_Arrow_Y
+
+    ORG $883CA
+        BYTE Spd_Arrow_X 0x20 Spd_Arrow_Y
+
+    ORG $883F6
+        BYTE Trv_Icon_X 0x21 Trv_Icon_Y
+
+    ORG $883B4
+        jumpToHack(Rescue_Arrows)
+
+    // display BWL even on first playthrough
+    ORG $086FE6
+        SHORT $46C0
+
+    // move where BWL numbers are displayed
+    ORG $0870B8
+        WORD 0x02003D2C + 2 * ((15 * 0x20) + 3)
+
+    // remove glowy
+    ORG $088590
+        SHORT $46C0 $46C0
+
+    // Display growths hack
+
+    ORG $8888C
+        BYTE 0x82 // listen to select in addition to R
+    ORG $88896
+        SHORT 0x46C0
+        jumpToHack(Button_Branch)
+
+    // Remember whether we were looking at growths or stats
+
+    ORG $8895C // Loads byte to store 1 before stat screen struct
+        callHack_r1(Load_Page)
+
+    ORG $888BC // Stores byte to store 1 before stat screen struct
+        callHack_r3(Store_Page)
+
+    // Display an R-button text about pressing Select, since I can't seem to fit it nicely, and make that the default
+
+    ORG $889D8
+        POIN PersonalDataRText
+
+    // replace CheckBattleUnitLevelUp
+    // TODO: move elsewhere
+    ORG $02BA28
+        jumpToHack(Write_Growths_To_Battle_Struct)
+
+    // replace GetAutoleveledStatIncrease
+    // TODO: move elsewhere
+    ORG $02B9C4
+        jumpToHack(Enemy_Autolevel)
+
+    // in UnitLoadStatsFromChracter
+    // TODO: move elsewhere
+    ORG $017E98
+        callHack_r3(New_Unit_Exp)
+        SHORT 0xE005
+
+POP
+
+#include "pages/mss_page1.lyn.event"
+#include "pages/mss_page2.lyn.event"
+#include "pages/mss_page3.lyn.event"
+#include "pages/mss_leftstatscreen.lyn.event"
+
+ALIGN 4
+Button_Branch:
+    #incbin "asm/ButtonBranch.dmp"
+
+ALIGN 4
+Load_Page:
+    #incbin "asm/LoadPage.dmp"
+    WORD Stat_Page_Ram_Loc
+
+ALIGN 4
+Store_Page:
+    #incbin "asm/StorePage.dmp"
+    WORD Stat_Page_Ram_Loc
+
+ALIGN 4
+Rescue_Arrows:
+    #incbin "asm/CheckRescueArrows.dmp"
+    POIN SkillTester
+    WORD SaviorID
+
+ALIGN 4
+Write_Growths_To_Battle_Struct:
+    #incbin "asm/Write_Growths_To_Battle_Struct.dmp"
+    POIN Class_Level_Cap_Table Get_Hp_Growth Get_Str_Growth Get_Skl_Growth Get_Spd_Growth Get_Def_Growth Get_Res_Growth Get_Luk_Growth
+    WORD Growth_Options
+
+ALIGN 4
+Enemy_Autolevel:
+    #incbin "asm/Enemy_Autolevel.dmp"
+    WORD Growth_Options
+
+ALIGN 4
+New_Unit_Exp:
+    #incbin "asm/New_Unit_Exp.dmp"
+    POIN Class_Level_Cap_Table
+
+#include "RText.event"

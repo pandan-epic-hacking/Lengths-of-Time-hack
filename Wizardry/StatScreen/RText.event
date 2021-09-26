@@ -1,0 +1,85 @@
+/*
+
+stat screen R menu is at 8a00b38
+find by breaking on key press while R menu open
+
+Each entry is 6 words
+Pointer 1 (up)
+POinter 2 (down)
+POinter 3 (left)
+Pointer 4 (right)
+x,y,Txtid
+Zero
+(Optional Pointer for alternate text routine)
+
+ST_Name:
+WORD 0
+POIN ST_Class
+WORD 0
+POIN ST_Luck
+BYTE 0x18
+BYTE 0x50
+SHORT 0
+WORD 0
+
+*/
+
+//#include "EAstdlib.event"
+
+#define RMenu(up,down,left,right,xcoord,ycoord,TID) "POIN up down left right;BYTE xcoord ycoord; SHORT TID; WORD 0 0;"
+#define RMenu(up,down,left,right,xcoord,ycoord,TID,Getter) "POIN up down left right; BYTE xcoord ycoord; SHORT TID; POIN 0 Getter|1"
+#define RMenu(up,down,left,right,xcoord,ycoord,SlotID,Looper,Getter) "POIN up down left right; BYTE xcoord ycoord; SHORT SlotID; POIN Looper|1 Getter|1"
+
+#define NameDescGetter 0x88bd5
+#define ClassDescGetter 0x88c01
+#define ConditionGetter 0x88a2d
+#define StrMagGetter 0x88b09
+
+PUSH
+    ORG 0xA00B38
+    ST_Name:
+        RMenu(PersonalDataRText,ST_Class,0,ST_Luck,0x18,0x50,0x0,NameDescGetter)
+    ST_Class:
+        RMenu(ST_Name,ST_Level,0,ST_Def,0x6,0x68,0x6E8,ClassDescGetter)
+    ST_Level:
+        RMenu(ST_Class,ST_HP,0,ST_Exp,0x6,0x78,0x542)
+    ST_Exp:
+        RMenu(ST_Class,ST_HP,ST_Level,ST_Res,0x26,0x78,0x543)
+    ST_HP:
+        RMenu(ST_Level,0,0,ST_Res,0x6,0x88,0x544)
+
+    PersonalDataRText:
+        RMenu(0,ST_Str,ST_Name,0,0x76,0x4,PersonalDataDesc1)
+
+    ST_Str:
+        RMenu(PersonalDataRText,ST_Mag,ST_Name,ST_Mov,0x66,0x18,0x546)
+    ST_Mag:
+        RMenu(ST_Str,ST_Skl,ST_Name,ST_Con,0x66,0x28,0x547)
+    ST_Skl:
+        RMenu(ST_Mag,ST_Spd,ST_Name,ST_Aid,0x66,0x38,0x548)
+    ST_Spd:
+        RMenu(ST_Skl,ST_Luck,ST_Name,ST_Ftg,0x66,0x48,0x549)
+    ST_Luck:
+        RMenu(ST_Spd,ST_Def,ST_Name,ST_Cond,0x66,0x58,0x54a)
+    ST_Def:
+        RMenu(ST_Luck,ST_Res,ST_Class,ST_Affin,0x66,0x68,0x54b)
+    ST_Res:
+        RMenu(ST_Def,0,ST_Exp,ST_Talk,0x66,0x78,0x54c)
+POP
+
+ALIGN 4
+
+ST_Mov:
+    RMenu(PersonalDataRText,ST_Con,ST_Str,0,0xA6,0x18,0x54D)
+ST_Con:
+    RMenu(ST_Mov,ST_Aid,ST_Mag,0,0xA6,0x28,0x54E)
+ST_Aid:
+    RMenu(ST_Con,ST_Ftg,ST_Skl,0,0xA6,0x38,0x54F)
+ST_Ftg:
+    RMenu(ST_Aid,ST_Cond,ST_Spd,0,0xa6,0x48,SS_FatigueRText)
+ST_Cond:
+    RMenu(ST_Ftg,ST_Affin,ST_Luck,0,0xA6,0x58,0x552,ConditionGetter)
+ST_Affin:
+    RMenu(ST_Cond,ST_Talk,ST_Def,0,0xA6,0x68,0x551)
+ST_Talk:
+    RMenu(ST_Affin,0,ST_Res,0,0xA6,0x78,SS_TalkRText)

@@ -1,0 +1,11 @@
+
+// removes the platform below the unit sprite in the stat screen
+// hack by Leonarth
+
+PUSH
+
+    // replace PageNumCtrl_DisplayMuPlatform
+    ORG $088354
+        SHORT $4770 // bx lr
+
+POP

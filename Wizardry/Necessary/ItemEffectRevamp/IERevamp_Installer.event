@@ -1,0 +1,394 @@
+
+// Item Effect Revamp (Stan)
+// original IER by Teraspark, modified by stan
+
+#include "Extensions/Hack Installation.txt"
+#include "_ItemStatMacros.event"
+
+/*The item effect revamp changes to effect id
+of item 0x79, the 5 use chest key, into master key,
+ which opens both doors and chests
+If you want to change it back into a normal,
+change the item effect id from 0x26 to 0x1e
+(the effect id of the 1 use chest key)
+*/
+
+#include "IERevamp_Core/_UseIDSetup.event" // still need to find and fix all mini jump tables
+#include "IERevamp_Core/_EffectIDAI_Setup.event"
+// Promo Items
+#include "IERevamp_Core/_PromoEffect_Setup.event"
+// StaffMight
+
+// Might Vulnerary
+// #include "ItemEffects/MigVul_Setup.event"
+
+// Update Items
+PUSH
+	SetItemUseID(0x8C, 0x37)	//give Latona an item effect id
+POP
+
+// ===============
+// = NEW BY STAN =
+// ===============
+
+// Item Effect Struct layer:
+// +00 | addr | CanUse func (r0 = unit, r1 = item)
+// +04 | addr | Effect func (r0 = unit, r1 = item)
+// +08 | addr | Action func (r0 = proc)
+// +0C | addr | CantUseMsgid func (r0 = unit, r1 = item)
+// +10 | addr | CanUsePrep func (r0 = unit, r1 = item)
+// +14 | addr | PrepEffect func (r0 = proc, r1 = unit, r2 = item)
+
+// defining HookProtect(from, to) for debug builds
+// use at the end of a hook: from defines the start of the hook, to defines the end of the space allocated for the hook
+// this does two things: protects the hook from other hacks and ensures the hook doesn't overflow past its allocated area
+
+#ifndef HookProtectDefined
+  #define HookProtectDefined
+  #define HookProtect(a_from, a_to) "PROTECT (a_from) (a_to); ASSERT (a_to) - CURRENTOFFSET"
+#endif // HookProtectDefined
+
+#include "Src/IERS-Core.lyn.event"
+
+PUSH
+
+    ORG $028894
+        WORD 0x47184B00; POIN IersCanUnitUseItemHook|1
+
+        // we put the vanilla handler jump table inline to save space
+        // these was already a similar jump table here anyway
+    IersVanillaCanUnitUseItemJt:
+        /* 00 */ WORD 0x08028C04 // No Effect
+        /* 01 */ WORD 0x08028A8C // Heal
+        /* 02 */ WORD 0x08028A8C // Mend
+        /* 03 */ WORD 0x08028A8C // Recover
+        /* 04 */ WORD 0x08028A9C // Physic
+        /* 05 */ WORD 0x08028AAC // Fortify
+        /* 06 */ WORD 0x08028ABC // Restore
+        /* 07 */ WORD 0x08028AEC // Silence Staff
+        /* 08 */ WORD 0x08028AFC // Sleep Staff
+        /* 09 */ WORD 0x08028B0C // Berserk Staff
+        /* 0A */ WORD 0x08028B1C // Warp Staff
+        /* 0B */ WORD 0x08028ACC // Rescue Staff
+        /* 0C */ WORD 0x08028BC8 // Torch Staff
+        /* 0D */ WORD 0x08028B2C // Hammerne
+        /* 0E */ WORD 0x08028B3C // Unlock Staff
+        /* 0F */ WORD 0x08028ADC // Barrier Staff
+        /* 10 */ WORD 0x08028B4C // Angelic Robe
+        /* 11 */ WORD 0x08028B4C // Energy Ring
+        /* 12 */ WORD 0x08028B4C // Secret Book
+        /* 13 */ WORD 0x08028B4C // Speedwings
+        /* 14 */ WORD 0x08028B4C // Goddess Icon
+        /* 15 */ WORD 0x08028B4C // Dragonshield
+        /* 16 */ WORD 0x08028B4C // Talisman
+        /* 17 */ WORD 0x08028B4C // Boots
+        /* 18 */ WORD 0x08028B4C // Body Ring
+        /* 19 */ WORD 0x08028B56 // Hero Crest
+        /* 1A */ WORD 0x08028B56 // Knight Crest
+        /* 1B */ WORD 0x08028B56 // Orion's Bolt
+        /* 1C */ WORD 0x08028B56 // Elysian Whip
+        /* 1D */ WORD 0x08028B56 // Guiding Ring
+        /* 1E */ WORD 0x08028B80 // Chest Key
+        /* 1F */ WORD 0x08028B88 // Door Key
+        /* 20 */ WORD 0x08028B90 // Lockpick
+        /* 21 */ WORD 0x08028B60 // Vulnerary
+        /* 22 */ WORD 0x08028B60 // Elixir
+        /* 23 */ WORD 0x08028B68 // Pure Water
+        /* 24 */ WORD 0x08028B78 // Antidote
+        /* 25 */ WORD 0x08028B70 // Torch Item
+        /* 26 */ WORD 0x08028B80 // Chest Key (x5)
+        /* 27 */ WORD 0x08028BA8 // Mine
+        /* 28 */ WORD 0x08028BB8 // Light Rune
+        /* 29 */ WORD 0x08028BD8 // Filla's Might
+        /* 2A */ WORD 0x08028BD8 // Ninis' Grace
+        /* 2B */ WORD 0x08028BD8 // Thor's Ire
+        /* 2C */ WORD 0x08028BD8 // Set's Litany
+        /* 2D */ WORD 0x08028B56 // Master Seal
+        /* 2E */ WORD 0x08028BE8 // Metis's Tome
+        /* 2F */ WORD 0x08028B56 // Heaven Seal
+        /* 30 */ WORD 0x08028B56 // Ocean Seal
+        /* 31 */ WORD 0x08028B56 // Lunar Brace
+        /* 32 */ WORD 0x08028B56 // Solar Brace
+        /* 33 */ WORD 0x08028B60 // Vulnerary
+        /* 34 */ WORD 0x08028B60 // Other Vulnerary
+        /* 35 */ WORD 0x08028B60 // Another Vulnerary
+        /* 36 */ WORD 0x08028BF8 // Juna Fruit
+        /* 37 */ WORD 0x08028B98 // Latona
+
+        HookProtect($028894, $028A8C)
+
+    ORG $028C0C
+        WORD 0x47184B00; POIN IersGetItemCantUseMsgidHook|1
+
+    IersVanillaGetItemCantUseMsgidJt:
+        /* 00 */ WORD 0x08028E54 // No Effect
+        /* 01 */ WORD 0x08028E54 // Heal
+        /* 02 */ WORD 0x08028E54 // Mend
+        /* 03 */ WORD 0x08028E54 // Recover
+        /* 04 */ WORD 0x08028E54 // Physic
+        /* 05 */ WORD 0x08028E54 // Fortify
+        /* 06 */ WORD 0x08028E54 // Restore
+        /* 07 */ WORD 0x08028E54 // Silence Staff
+        /* 08 */ WORD 0x08028E54 // Sleep Staff
+        /* 09 */ WORD 0x08028E54 // Berserk Staff
+        /* 0A */ WORD 0x08028E54 // Warp Staff
+        /* 0B */ WORD 0x08028E54 // Rescue Staff
+        /* 0C */ WORD 0x08028E54 // Torch Staff
+        /* 0D */ WORD 0x08028E54 // Hammerne
+        /* 0E */ WORD 0x08028E54 // Unlock Staff
+        /* 0F */ WORD 0x08028E54 // Barrier Staff
+        /* 10 */ WORD 0x08028DDC // Angelic Robe
+        /* 11 */ WORD 0x08028DDC // Energy Ring
+        /* 12 */ WORD 0x08028DDC // Secret Book
+        /* 13 */ WORD 0x08028DDC // Speedwings
+        /* 14 */ WORD 0x08028DDC // Goddess Icon
+        /* 15 */ WORD 0x08028DDC // Dragonshield
+        /* 16 */ WORD 0x08028DDC // Talisman
+        /* 17 */ WORD 0x08028DDC // Boots
+        /* 18 */ WORD 0x08028DDC // Body Ring
+        /* 19 */ WORD 0x08028E20 // Hero Crest
+        /* 1A */ WORD 0x08028E20 // Knight Crest
+        /* 1B */ WORD 0x08028E20 // Orion's Bolt
+        /* 1C */ WORD 0x08028E20 // Elysian Whip
+        /* 1D */ WORD 0x08028E20 // Guiding Ring
+        /* 1E */ WORD 0x08028DE4 // Chest Key
+        /* 1F */ WORD 0x08028DEC // Door Key
+        /* 20 */ WORD 0x08028DF4 // Lockpick
+        /* 21 */ WORD 0x08028DDC // Vulnerary
+        /* 22 */ WORD 0x08028DDC // Elixir
+        /* 23 */ WORD 0x08028DDC // Pure Water
+        /* 24 */ WORD 0x08028DDC // Antidote
+        /* 25 */ WORD 0x08028DDC // Torch Item
+        /* 26 */ WORD 0x08028DE4 // Chest Key (x5)
+        /* 27 */ WORD 0x08028E54 // Mine
+        /* 28 */ WORD 0x08028E54 // Light Rune
+        /* 29 */ WORD 0x08028E54 // Filla's Might
+        /* 2A */ WORD 0x08028E54 // Ninis' Grace
+        /* 2B */ WORD 0x08028E54 // Thor's Ire
+        /* 2C */ WORD 0x08028E54 // Set's Litany
+        /* 2D */ WORD 0x08028E20 // Master Seal
+        /* 2E */ WORD 0x08028E54 // Metis's Tome
+        /* 2F */ WORD 0x08028E20 // Heaven Seal
+        /* 30 */ WORD 0x08028E20 // Ocean Seal
+        /* 31 */ WORD 0x08028E20 // Lunar Brace
+        /* 32 */ WORD 0x08028E20 // Solar Brace
+        /* 33 */ WORD 0x08028DDC // Vulnerary
+        /* 34 */ WORD 0x08028DDC // Other Vulnerary
+        /* 35 */ WORD 0x08028DDC // Another Vulnerary
+        /* 36 */ WORD 0x08028E4C // Juna Fruit
+        /* 37 */ WORD 0x08028E54 // Latona
+
+        HookProtect($028C0C, $028DDC)
+
+    ORG $028E70
+        WORD 0x47184B00; POIN IersDoItemEffectHook|1
+
+    IersVanillaDoItemEffectHookJt:
+        /* 00 */ WORD 0x0802905C // No Effect
+        /* 01 */ WORD 0x08028F94 // Heal
+        /* 02 */ WORD 0x08028F94 // Mend
+        /* 03 */ WORD 0x08028F94 // Recover
+        /* 04 */ WORD 0x08028F9C // Physic
+        /* 05 */ WORD 0x08029014 // Fortify
+        /* 06 */ WORD 0x08028FBC // Restore
+        /* 07 */ WORD 0x08028FCC // Silence Staff
+        /* 08 */ WORD 0x08028FD4 // Sleep Staff
+        /* 09 */ WORD 0x08028FDC // Berserk Staff
+        /* 0A */ WORD 0x08029004 // Warp Staff
+        /* 0B */ WORD 0x08028FAC // Rescue Staff
+        /* 0C */ WORD 0x08029040 // Torch Staff
+        /* 0D */ WORD 0x0802900C // Hammerne
+        /* 0E */ WORD 0x08028FF4 // Unlock Staff
+        /* 0F */ WORD 0x08028FEC // Barrier Staff
+        /* 10 */ WORD 0x0802905C // Angelic Robe
+        /* 11 */ WORD 0x0802905C // Energy Ring
+        /* 12 */ WORD 0x0802905C // Secret Book
+        /* 13 */ WORD 0x0802905C // Speedwings
+        /* 14 */ WORD 0x0802905C // Goddess Icon
+        /* 15 */ WORD 0x0802905C // Dragonshield
+        /* 16 */ WORD 0x0802905C // Talisman
+        /* 17 */ WORD 0x0802905C // Boots
+        /* 18 */ WORD 0x0802905C // Body Ring
+        /* 19 */ WORD 0x0802905C // Hero Crest
+        /* 1A */ WORD 0x0802905C // Knight Crest
+        /* 1B */ WORD 0x0802905C // Orion's Bolt
+        /* 1C */ WORD 0x0802905C // Elysian Whip
+        /* 1D */ WORD 0x0802905C // Guiding Ring
+        /* 1E */ WORD 0x0802905C // Chest Key
+        /* 1F */ WORD 0x0802905C // Door Key
+        /* 20 */ WORD 0x0802905C // Lockpick
+        /* 21 */ WORD 0x0802905C // Vulnerary
+        /* 22 */ WORD 0x0802905C // Elixir
+        /* 23 */ WORD 0x0802905C // Pure Water
+        /* 24 */ WORD 0x0802905C // Antidote
+        /* 25 */ WORD 0x0802905C // Torch Item
+        /* 26 */ WORD 0x0802905C // Chest Key (x5)
+        /* 27 */ WORD 0x0802901C // Mine
+        /* 28 */ WORD 0x0802902C // Light Rune
+        /* 29 */ WORD 0x08029048 // Filla's Might
+        /* 2A */ WORD 0x08029048 // Ninis' Grace
+        /* 2B */ WORD 0x08029048 // Thor's Ire
+        /* 2C */ WORD 0x08029048 // Set's Litany
+        /* 2D */ WORD 0x0802905C // Master Seal
+        /* 2E */ WORD 0x0802905C // Metis's Tome
+        /* 2F */ WORD 0x0802905C // Heaven Seal
+        /* 30 */ WORD 0x0802905C // Ocean Seal
+        /* 31 */ WORD 0x0802905C // Lunar Brace
+        /* 32 */ WORD 0x0802905C // Solar Brace
+        /* 33 */ WORD 0x0802905C // Vulnerary
+        /* 34 */ WORD 0x0802905C // Other Vulnerary
+        /* 35 */ WORD 0x0802905C // Another Vulnerary
+        /* 36 */ WORD 0x0802905C // Juna Fruit
+        /* 37 */ WORD 0x08029014 // Latona
+
+        HookProtect($028E70, $028F94)
+
+    ORG $02FC70
+        WORD 0x47184B00; POIN IersDoItemActionHook|1
+
+    IersVanillaDoItemActionHookJt:
+        /* 00 */ WORD 0x0802FF76 // No Effect
+        /* 01 */ WORD 0x0802FE6C // Heal
+        /* 02 */ WORD 0x0802FE6C // Mend
+        /* 03 */ WORD 0x0802FE6C // Recover
+        /* 04 */ WORD 0x0802FE6C // Physic
+        /* 05 */ WORD 0x0802FE84 // Fortify
+        /* 06 */ WORD 0x0802FE8C // Restore
+        /* 07 */ WORD 0x0802FE74 // Silence Staff
+        /* 08 */ WORD 0x0802FE74 // Sleep Staff
+        /* 09 */ WORD 0x0802FE74 // Berserk Staff
+        /* 0A */ WORD 0x0802FEA4 // Warp Staff
+        /* 0B */ WORD 0x0802FE94 // Rescue Staff
+        /* 0C */ WORD 0x0802FF60 // Torch Staff
+        /* 0D */ WORD 0x0802FEB4 // Hammerne
+        /* 0E */ WORD 0x0802FEAC // Unlock Staff
+        /* 0F */ WORD 0x0802FE9C // Barrier Staff
+        /* 10 */ WORD 0x0802FF40 // Angelic Robe
+        /* 11 */ WORD 0x0802FF40 // Energy Ring
+        /* 12 */ WORD 0x0802FF40 // Secret Book
+        /* 13 */ WORD 0x0802FF40 // Speedwings
+        /* 14 */ WORD 0x0802FF40 // Goddess Icon
+        /* 15 */ WORD 0x0802FF40 // Dragonshield
+        /* 16 */ WORD 0x0802FF40 // Talisman
+        /* 17 */ WORD 0x0802FF40 // Boots
+        /* 18 */ WORD 0x0802FF40 // Body Ring
+        /* 19 */ WORD 0x0802FEEC // Hero Crest
+        /* 1A */ WORD 0x0802FEEC // Knight Crest
+        /* 1B */ WORD 0x0802FEEC // Orion's Bolt
+        /* 1C */ WORD 0x0802FEEC // Elysian Whip
+        /* 1D */ WORD 0x0802FEEC // Guiding Ring
+        /* 1E */ WORD 0x0802FEE6 // Chest Key
+        /* 1F */ WORD 0x0802FEE6 // Door Key
+        /* 20 */ WORD 0x0802FEE6 // Lockpick
+        /* 21 */ WORD 0x0802FEC4 // Vulnerary
+        /* 22 */ WORD 0x0802FECE // Elixir
+        /* 23 */ WORD 0x0802FED6 // Pure Water
+        /* 24 */ WORD 0x0802FEDE // Antidote
+        /* 25 */ WORD 0x0802FEBC // Torch Item
+        /* 26 */ WORD 0x0802FEE6 // Chest Key (x5)
+        /* 27 */ WORD 0x0802FF50 // Mine
+        /* 28 */ WORD 0x0802FF58 // Light Rune
+        /* 29 */ WORD 0x0802FF68 // Filla's Might
+        /* 2A */ WORD 0x0802FF68 // Ninis' Grace
+        /* 2B */ WORD 0x0802FF68 // Thor's Ire
+        /* 2C */ WORD 0x0802FF68 // Set's Litany
+        /* 2D */ WORD 0x0802FEEC // Master Seal
+        /* 2E */ WORD 0x0802FF40 // Metis's Tome
+        /* 2F */ WORD 0x0802FEEC // Heaven Seal
+        /* 30 */ WORD 0x0802FEEC // Ocean Seal
+        /* 31 */ WORD 0x0802FEEC // Lunar Brace
+        /* 32 */ WORD 0x0802FEEC // Solar Brace
+        /* 33 */ WORD 0x0802FEC4 // Vulnerary
+        /* 34 */ WORD 0x0802FEEC // Other Vulnerary
+        /* 35 */ WORD 0x0802FEC4 // Another Vulnerary
+        /* 36 */ WORD 0x0802FF70 // Juna Fruit
+        /* 37 */ WORD 0x0802FF48 // Latona
+
+        HookProtect($02FC70, $02FE6C)
+
+    ORG $029F18
+        WORD 0x47184B00; POIN IersCanUnitUseItemPrepHook|1
+
+    IersVanillaCanUnitUseItemPrepJt:
+        /* 00 */ WORD 0x0802A100 // No Effect
+        /* 01 */ WORD 0x0802A100 // Heal
+        /* 02 */ WORD 0x0802A100 // Mend
+        /* 03 */ WORD 0x0802A100 // Recover
+        /* 04 */ WORD 0x0802A100 // Physic
+        /* 05 */ WORD 0x0802A100 // Fortify
+        /* 06 */ WORD 0x0802A100 // Restore
+        /* 07 */ WORD 0x0802A100 // Silence Staff
+        /* 08 */ WORD 0x0802A100 // Sleep Staff
+        /* 09 */ WORD 0x0802A100 // Berserk Staff
+        /* 0A */ WORD 0x0802A100 // Warp Staff
+        /* 0B */ WORD 0x0802A100 // Rescue Staff
+        /* 0C */ WORD 0x0802A100 // Torch Staff
+        /* 0D */ WORD 0x0802A100 // Hammerne
+        /* 0E */ WORD 0x0802A100 // Unlock Staff
+        /* 0F */ WORD 0x0802A100 // Barrier Staff
+        /* 10 */ WORD 0x0802A0D0 // Angelic Robe
+        /* 11 */ WORD 0x0802A0D0 // Energy Ring
+        /* 12 */ WORD 0x0802A0D0 // Secret Book
+        /* 13 */ WORD 0x0802A0D0 // Speedwings
+        /* 14 */ WORD 0x0802A0D0 // Goddess Icon
+        /* 15 */ WORD 0x0802A0D0 // Dragonshield
+        /* 16 */ WORD 0x0802A0D0 // Talisman
+        /* 17 */ WORD 0x0802A0D0 // Boots
+        /* 18 */ WORD 0x0802A0D0 // Body Ring
+        /* 19 */ WORD 0x0802A0DA // Hero Crest
+        /* 1A */ WORD 0x0802A0DA // Knight Crest
+        /* 1B */ WORD 0x0802A0DA // Orion's Bolt
+        /* 1C */ WORD 0x0802A0DA // Elysian Whip
+        /* 1D */ WORD 0x0802A0DA // Guiding Ring
+        /* 1E */ WORD 0x0802A100 // Chest Key
+        /* 1F */ WORD 0x0802A100 // Door Key
+        /* 20 */ WORD 0x0802A100 // Lockpick
+        /* 21 */ WORD 0x0802A100 // Vulnerary
+        /* 22 */ WORD 0x0802A100 // Elixir
+        /* 23 */ WORD 0x0802A100 // Pure Water
+        /* 24 */ WORD 0x0802A100 // Antidote
+        /* 25 */ WORD 0x0802A100 // Torch Item
+        /* 26 */ WORD 0x0802A100 // Chest Key (x5)
+        /* 27 */ WORD 0x0802A100 // Mine
+        /* 28 */ WORD 0x0802A100 // Light Rune
+        /* 29 */ WORD 0x0802A100 // Filla's Might
+        /* 2A */ WORD 0x0802A100 // Ninis' Grace
+        /* 2B */ WORD 0x0802A100 // Thor's Ire
+        /* 2C */ WORD 0x0802A100 // Set's Litany
+        /* 2D */ WORD 0x0802A0DA // Master Seal
+        /* 2E */ WORD 0x0802A0E4 // Metis's Tome
+        /* 2F */ WORD 0x0802A0DA // Heaven Seal
+        /* 30 */ WORD 0x0802A0DA // Ocean Seal
+        /* 31 */ WORD 0x0802A0DA // Lunar Brace
+        /* 32 */ WORD 0x0802A0DA // Solar Brace
+        /* 33 */ WORD 0x0802A100 // Vulnerary
+        /* 34 */ WORD 0x0802A0DA // Other Vulnerary
+        /* 35 */ WORD 0x0802A100 // Another Vulnerary
+        /* 36 */ WORD 0x0802A0F4 // Juna Fruit
+        /* 37 */ WORD 0x0802A100 // Latona
+
+        HookProtect($029F18, $02A0D0)
+
+POP
+
+// =========================
+// = HOOKLISTS INTEGRATION =
+// =========================
+// if you are not using HookLists.lua, you need to maintain IersEffectTable manually
+
+//+ IERS_EFFECT_TABLE = {}
+
+//+ function iers_set_effect(effect_id, table_addr_str)
+//+     IERS_EFFECT_TABLE[effect_id + 1] = table_addr_str
+//+ end
+
+//+ call_after(function()
+//+     print("ALIGN 4")
+//+     print("IersEffectTable:")
+//+     for i = 1, 0x100 do
+//+         if IERS_EFFECT_TABLE[i] == nil then
+//+             IERS_EFFECT_TABLE[i] = "0"
+//+         end
+//+         print(("    /* %02X */ POIN %s"):format(i-1, IERS_EFFECT_TABLE[i]))
+//+     end
+//+ end)

@@ -1,0 +1,39 @@
+
+#include "EAstdlib.event"
+
+#define FreeSpace    0xE4A440
+#define FreeSpaceEnd 0xFE0000
+
+#define FreeSpaceBLRange 0x1C1EC0
+
+#ifndef DebuffTable
+  #define DebuffTable     0x0203F100
+  #define DebuffTableSize 0x00000440
+#endif
+
+#include "BaseInfo.event"
+
+#define TextTable BaseTextTable
+#define ItemTable BaseItemTable
+#define SpellAssociationTable BaseItemAnimTable
+#define PersonalSkillTable BaseCharacterSkillTable
+#define ClassSkillTable BaseClassSkillTable
+#define CharLevelUpSkillTable BaseCharacterLevelUpSkillTable
+#define ClassLevelUpSkillTable BaseClassLevelUpSkillTable
+#define PortraitTable BaseFaceTable
+#define MagCharTable BaseMagSplitCharacterTable
+#define MagClassTable BaseMagSplitClassTable
+
+#include "Wizardry/SkillSystem/skill_definitions.event"
+
+ASSERT 0 - CURRENTOFFSET
+
+#include "Patch.event"
+
+ORG FreeSpace
+    #include "Tables/Tables.event"
+    #include "Writans/Text.event"
+
+    #include "Wizardry/Wizardry.event"
+
+    ASSERT FreeSpaceEnd - CURRENTOFFSET
